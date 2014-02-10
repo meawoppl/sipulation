@@ -5,28 +5,35 @@ from scipy import misc, interpolate, spatial, random, ndimage
 
 
 def nRandomImagePoint(image, n):
+    # Compute a CDF function across the flattened image
     imageCDF = image.flatten().cumsum()
-    imageCDF /= 1.0 * imageCDF[-1]
+    imageCDF /= 1.0 * imageCDF.max()
 
-    pointContainer = []
-
+    # Function to turn a random point in the CDF into a random index in the image
     indexInterpolator = interpolate.interp1d(imageCDF, arange(imageCDF.size))
-    randomCDFValues = random.uniform(0.0, 1.0, size=n)
 
-    iInterp = indexInterpolator(randomCDFValues)
+    # Set to collect the UNIQUE indices
+    indexContainer = set()
+    while len(indexContainer) < n:
+        # Generate at most the number of points remaining
+        maxToGenerate = n - len(indexContainer)
+        randomCDFValues = random.uniform(0, 1.0, maxToGenerate)
 
-    print iInterp, image.size
+        # Back them into indices
+        iInterp = indexInterpolator(randomCDFValues)
+        iInterp = np.round(iInterp).astype(uint32)
 
+        # Add them to the set
+        indexContainer.update(iInterp)
+
+    # Break them out of the set
+    iInterp = array(list(indexContainer))
+
+    # Compute the equivalent xy
     xCoords = (iInterp // image.shape[0]).astype(int32)
     yCoords = (iInterp %  image.shape[0]).astype(int32)
 
-    print xCoords.ptp()
-    print yCoords.ptp()
-
-    # Now lets add +- 1 px in each direction so we dont get point stacking
-    xCoords = xCoords + random.uniform(-1.0, 1.0, size=xCoords.size)
-    yCoords = yCoords + random.uniform(-1.0, 1.0, size=yCoords.size)
-
+    # Return them glued together.
     return c_[xCoords, yCoords]
 
 size = 1024
