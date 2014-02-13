@@ -24,7 +24,7 @@ def colorCluster(colorImage, nColorClusters, showSegmentation = False):
             projected[:,:,i] = kme.cluster_centers_[:, i].take(result)
 
         figure()
-        imshow(cdata)
+        imshow(colorImage)
 
         figure()
         imshow(projected)
